@@ -32,7 +32,7 @@ class SubPage(QMainWindow):
             sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
             sess_options.enable_cpu_mem_arena = False
             # 指定CUDA设备
-            onnx_path_demo = "./models/segfb0.onnx"
+            onnx_path_demo = "./models/PP-Matting-1024.onnx"
             if self.ui.useGPURB.isChecked():
                 self.net = onnxruntime.InferenceSession(onnx_path_demo, providers=['CUDAExecutionProvider'],sess_options=sess_options)
             else:
