@@ -30,6 +30,12 @@ case1: (Model: ./models/PP-Matting-1024.onnx) (Img: ./images/3.png)
 
 ![input](assets/example1.png)
 
+
+
+case2: (Model: ./models/ocrnet_hrnetw18_cityscapes.onnx) (Img: ./images/stuttgart_000136_000019_leftImg8bit.png)
+
+![](assets/image.png)
+
 ---
 
 
@@ -271,13 +277,22 @@ If you want to customize or extend the interface and functionality, follow these
 ## 🧠 Example: Exporting from PaddleSeg
 
 ```bash
-python export.py \
-    --config configs/deeplabv3p_resnet50_os8_ade20k.yml \
-    --model_path output/deeplabv3p.onnx \
-    --save_dir export_model
+python tools/export.py \
+--config configs\ocrnet\ocrnet_hrnetw18_cityscapes_1024x512_160k.yml \
+--model_path model.pdparams \
+--input_shape 1 3 512 1024 \
+--output_op none
 ```
 
-Then simply load `export_model/model.onnx` in the GUI.
+
+
+```
+paddle2onnx --model_dir output/inference_model \
+--model_filename model.pdmodel \
+--params_filename model.pdiparams \
+--opset_version 11 \
+--save_file ocrnet_hrnetw18_cityscapes.onnx
+```
 
 ---
 

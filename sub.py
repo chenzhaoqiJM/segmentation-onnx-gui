@@ -12,6 +12,8 @@ from cmythread import Thread_1
 from ui_files.auto import Ui_MainWindow
 import onnxruntime
 from natsort import natsorted
+import colorsys
+import random
 
 class SubPage(QMainWindow):
     def __init__(self, parent=None):
@@ -408,6 +410,21 @@ class SubPage(QMainWindow):
         self.colorMap=[(255,50,70),(0,255,30),(0,56,230),
                     (254,67,101), (252,157,154), (131,175,155),(244,208,0),(220,87,18),
                     (64,116,52),(161,47,47)]
+        
+        # Generate the remaining 245 colors (HSV evenly distributed)
+        def generate_colors(n):
+            colors = []
+            for i in range(n):
+                h = (i * 1.0 / n)  # hue is evenly distributed
+                s = 0.8 + 0.2 * random.random()  # High saturation
+                v = 0.7 + 0.3 * random.random()  # Medium to high brightness
+                r, g, b = colorsys.hsv_to_rgb(h, s, v)
+                colors.append((int(r * 255), int(g * 255), int(b * 255)))
+            random.shuffle(colors)  # Disrupt to avoid being too close to each other
+            return colors
+
+        # 扩展到255个颜色
+        self.colorMap.extend(generate_colors(255 - len(self.colorMap)))
         
         self.imgPath = r'C:\Users\hp\Desktop\tiredata\images'  # Path of the image, set only after selecting an image
         

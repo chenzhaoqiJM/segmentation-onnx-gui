@@ -76,6 +76,7 @@ class Thread_1(QThread):
 
             if output_index_0.shape[1] > 1:
                 print("Detect Multi-class Output............................")
+                print('max value:', output_index_0.max())
                 logmax = softmax(output_index_0)
                 pred2 = logmax[0,1:,:,:] # [class, H, W] 0 is the background, not
 
