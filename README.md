@@ -22,11 +22,17 @@ This application supports models exported from **[PaddleSeg](https://github.com/
 
 ---
 
+
+
 ## 🖥️ Demo
+
+case1: (Model: ./models/PP-Matting-1024.onnx) (Img: ./images/3.png)
 
 ![input](assets/example1.png)
 
 ---
+
+
 
 ## 📦 Installation
 
@@ -53,6 +59,8 @@ Please select the requirements file according to your python version
 
 ---
 
+
+
 ## 🚀 Usage
 
 ### 1. Launch the GUI
@@ -78,6 +86,8 @@ python main.py
 
 ---
 
+
+
 ## 🧩 Model Requirements
 
 * **Input format**: `NCHW` (e.g., `[1, 3, 1024, 1024]`)
@@ -91,7 +101,7 @@ If your model input type differs, the tool automatically adapts preprocessing ba
 This GUI supports **semantic segmentation models** exported to ONNX format with the following output conventions:
 
 
-### **1️⃣ Multi-class segmentation output**
+### **1. Multi-class segmentation output**
 
 **Shape:**
 
@@ -121,7 +131,7 @@ pred2 = logmax[0, 1:, :, :]       # Drop background channel (index 0)
   * ONNX models exported from PyTorch / TensorFlow with per-class logits.
 
 
-### **2️⃣ Binary segmentation output (single channel)**
+### **2. Binary segmentation output (single channel)**
 
 **Shape:**
 
@@ -137,10 +147,10 @@ pred2 = logmax[0, 1:, :, :]       # Drop background channel (index 0)
 
 ```python
 if output.min() >= 0 and output.max() <= 1:
-    # Model output is already a probability map
+    # Binary output is already a probability map
     pred2 = output[0]
 else:
-    # Model output is a logit map, apply sigmoid
+    # Binary output is a logit map, apply sigmoid
     pred2 = sigmoid(output)[0]
 ```
 
@@ -150,7 +160,7 @@ else:
 * Applies **sigmoid** only when the raw output appears to be logits.
 
 
-### **3️⃣ Error Handling / Fallback**
+### **3. Error Handling / Fallback**
 
 If inference fails for any reason (invalid shape, type mismatch, etc.),
 the code safely returns a **dummy mask** of shape `(1024, 1024)` filled with ones:
@@ -162,7 +172,7 @@ pred2 = np.ones(shape=(1024, 1024), dtype=np.float32)
 This prevents GUI crashes during debugging or invalid model loading.
 
 
-### ✅ Summary Table
+### Summary Table
 
 | Output Type                       | Expected Shape        | Activation Applied | Description                            |
 | --------------------------------- | --------------------- | ------------------ | -------------------------------------- |
@@ -172,7 +182,7 @@ This prevents GUI crashes during debugging or invalid model loading.
 | Invalid / Error                   | Any                   | None               | Returns dummy mask of ones             |
 
 
-### ⚙️ Input Compatibility (for completeness)
+### Input Compatibility 
 
 The model input is also automatically adapted:
 
@@ -182,6 +192,8 @@ The model input is also automatically adapted:
 
 
 ---
+
+
 
 ## 📁 Project Structure
 
@@ -199,6 +211,53 @@ The model input is also automatically adapted:
 
 ---
 
+
+
+## ⚙️ Secondary Development
+
+If you want to customize or extend the interface and functionality, follow these steps:
+
+1. **Edit the UI File**
+    Open and edit the interface file with **Qt Designer**:
+
+   ```
+   ui_files/auto.ui
+   ```
+
+   Save the file after making your changes.
+
+2. **Convert `.ui` to `.py`**
+    Run the following command to convert the updated `.ui` file into a Python module:
+
+   ```bash
+   python -m PyQt5.uic.pyuic ui_files/auto.ui -o ui_files/auto.py
+   ```
+
+3. **Run the Application**
+    Execute the command below to launch the application and check the updated interface:
+
+   ```bash
+   python main.py
+   ```
+
+4. **Customize Model Logic**
+
+   - To modify **pre-processing** and **post-processing** logic, edit:
+
+     ```
+     cmythread.py
+     ```
+
+   - To adjust **UI interaction** and **model initialization** logic, edit:
+
+     ```
+     sub.py
+     ```
+
+---
+
+
+
 ## ⚙️ Advanced Notes
 
 * Supports **float16** inference when ONNX model expects it
@@ -206,6 +265,8 @@ The model input is also automatically adapted:
 * Compatible with **ONNX models exported from PyTorch**, **TensorFlow**, and **PaddlePaddle**
 
 ---
+
+
 
 ## 🧠 Example: Exporting from PaddleSeg
 
@@ -220,12 +281,16 @@ Then simply load `export_model/model.onnx` in the GUI.
 
 ---
 
+
+
 ## 📜 License
 
 This project is released under the **MIT License**.
 See [LICENSE](LICENSE) for details.
 
 ---
+
+
 
 ## 🤝 Contributing
 
@@ -234,11 +299,12 @@ Feel free to open a pull request or report a bug.
 
 ---
 
+
+
 ## 📬 Contact
 
 Author: chenzhaoqi
 Email: 869948402@qq.com
 
 ---
-
 

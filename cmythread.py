@@ -8,7 +8,6 @@ import time
 class Info():
     def __init__(self):
         self.name = 'x'
-        # self.shape = [1,3,500,1000]
         self.shape = [1,3,1024,1024]
 
 def softmax(x):
@@ -21,7 +20,6 @@ def softmax(x):
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-#线程1 继承QThread
 class Thread_1(QThread):
     _signal = pyqtSignal(list)  #线程要发出的信号格式
     def __init__(self, img, net):
@@ -72,25 +70,22 @@ class Thread_1(QThread):
             t1 = time.time()
             outputs = self.session.run(None, {input_name: img_in})
             print("time cost: ", time.time()-t1)
-
             print("Output Shape:", np.shape(outputs))
 
-            # logmax = softmax(outputs[0])
-            # print("Shape By Softmax: ", np.shape(logmax))
-            
-            # pred2 = logmax[0,1:,:,:] # [class, H, W] 0是背景，不要
             output_index_0 = outputs[0]
 
             if output_index_0.shape[1] > 1:
+                print("Detect Multi-class Output............................")
                 logmax = softmax(output_index_0)
-                print("Shape By Softmax: ", np.shape(logmax))
                 pred2 = logmax[0,1:,:,:] # [class, H, W] 0是背景，不要
 
             elif output_index_0.shape[1] == 1:
+                print("Detect Binary Output.................................")
                 if output_index_0.min()>=0 and output_index_0.max()<=1:
-                    print("Detect logit output")
+                    print("Binary output is already a probability map")
                     pred2 = output_index_0[0]
                 else:
+                    print("Binary output is a logit map, apply sigmoid")
                     pred2 = sigmoid(output_index_0)[0]
                 
         
