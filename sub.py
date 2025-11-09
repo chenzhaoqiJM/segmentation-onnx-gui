@@ -16,22 +16,22 @@ from natsort import natsorted
 class SubPage(QMainWindow):
     def __init__(self, parent=None):
         super(SubPage, self).__init__(parent)
-        self.ui = Ui_MainWindow()  # 初始化窗口对象
-        self.ui.setupUi(self)  # 初始化控件
+        self.ui = Ui_MainWindow()   # Initialize the window object
+        self.ui.setupUi(self)       # Initialize the widgets
         self.__set_ui()
         
-        self.__set_global_variable()  # 初始化必要变量
-        self.__set_signal_and_slot()  # 初始化信号和槽的连接
+        self.__set_global_variable()  # Initialize the necessary variables
+        self.__set_signal_and_slot()  # Initialize the connections between signals and slots
         self.__load_default_img()
         
         try:
             sess_options = onnxruntime.SessionOptions()
-            sess_options.intra_op_num_threads = 4 # 设置每个操作的线程数，以控制并行执行的程度。
-            sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL 	# ORT_SEQUENTIAL ORT_PARALLEL 并行执行模式。在这种模式下，计算图中的操作可以并行执行
-            sess_options.inter_op_num_threads = 4 # 设置跨操作的线程数，以控制这些操作之间的并行执行程度。
+            sess_options.intra_op_num_threads = 4 
+            sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL 	
+            sess_options.inter_op_num_threads = 4 
             sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
             sess_options.enable_cpu_mem_arena = False
-            # 指定CUDA设备
+            
             onnx_path_demo = "./models/PP-Matting-1024.onnx"
             if self.ui.useGPURB.isChecked():
                 self.net = onnxruntime.InferenceSession(onnx_path_demo, providers=['CUDAExecutionProvider'],sess_options=sess_options)
@@ -44,35 +44,33 @@ class SubPage(QMainWindow):
                 self.net = None
         self.modelNameList = []
             
-    # &&&定义信号与槽的连接&&&
+    # &&&Define the connections between signals and slots&&&
     def __set_signal_and_slot(self):
-        # # 每次切换图片时是否执行自动检测
+        ## Whether to perform automatic detection each time the image is switched
         self.ui.autoDetectRB.clicked.connect(self._slot_auto_detect_slot)
         
         self.ui.useGPURB.clicked.connect(self._slot_update_model)
         
-        # 检测图片
+        ## Seg the image
         self.ui.checkThePicture.clicked.connect(self._slot_check_one_img)
 
-        # # 文件选择的信号与槽
-        self.ui.selectFileBtn.clicked.connect(self._slot_open_image)  # 选择图片
-        self.ui.previousImgBtn.clicked.connect(self._slot_previous_img)  # 上一张图片
-        self.ui.nextImgBtn.clicked.connect(self._slot_next_img)  # 下一张图片
+        ## Signal and slot for file selection
+        self.ui.selectFileBtn.clicked.connect(self._slot_open_image)    # Select an image
+        self.ui.previousImgBtn.clicked.connect(self._slot_previous_img) # Previous image
+        self.ui.nextImgBtn.clicked.connect(self._slot_next_img)         # Next image
 
-        # # 图片选择信号与槽
-        self.ui.selectedFileNameCB.activated[str].connect(self._slot_switch_image_by_cb)   # 用户下拉框改变
+        ## Signal and slot for image selection
+        self.ui.selectedFileNameCB.activated[str].connect(self._slot_switch_image_by_cb)   # User dropdown change
         
-        # 分割阈值信号与槽
+        ## Signal and slot for segmentation threshold
         self.ui.threshold_hS.sliderMoved.connect(self._update_dst_img_slider)
 
-        # 选择模型
+        ## Select model
         self.ui.selectModelBtn.clicked.connect(self._slot_open_model)
         self.ui.selectModelCB.activated[str].connect(self._slot_switch_model_by_cb)
         
-        # 保存标签
+        ## Save Mask
         self.ui.pushButton_Save.clicked.connect(self._slot_save_mask)
-        
-        #
         
         self.ui.BrightnessHSlider.sliderMoved.connect(self._slot_distort_sliders)
         self.ui.ContrastHSlider.sliderMoved.connect(self._slot_distort_sliders)
@@ -80,8 +78,8 @@ class SubPage(QMainWindow):
         self.ui.HueHSlider.sliderMoved.connect(self._slot_distort_sliders)
         self.ui.sharpnessHSlider.sliderMoved.connect(self._slot_distort_sliders)
         
-    # --------------------------------------槽函数定义------------------------------------------------------------------------------------
-    # ---滑动条，亮度对比度等
+    # --------------------------------------Definition of slot functions------------------------------------------------------------------------------------
+    # ---Sliders for brightness, contrast, etc.
     def _slot_distort_sliders(self):
         # {"brightness":1, "contrast":1, "saturation":1, "hue":0, "sharpness":0}
         sender = self.sender()
@@ -122,9 +120,8 @@ class SubPage(QMainWindow):
             
         self._update_source_image_win_byTransform()
     
-    # ---保存标签
+    # ---Save labels
     def _slot_save_mask(self):
-        # 目标二值图
         self.ui.pushButton_Save.setEnabled(False)
         color_map = get_color_map_list(256)
         save_mask_path = self.imgPath
@@ -138,10 +135,10 @@ class SubPage(QMainWindow):
         lbl_pil.save(os.path.join(save_mask_path, mask_name))
         self.ui.pushButton_Save.setEnabled(True)
     
-    # ----------槽函数，键盘事件,重写父类的方法--------------
+    # ----------Slot functions, keyboard events, and overriding parent class methods--------------
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Left:
-            self._slot_previous_img()  # 上一张图片
+            self._slot_previous_img() 
         if event.key() == Qt.Key_Right:
             self._slot_next_img()
 
@@ -183,40 +180,41 @@ class SubPage(QMainWindow):
         except:
             pass
     
-    # ----------槽函数，勾选自动检测触发--------------------
+    # ----------Slot function triggered by checking automatic detection--------------------
     def _slot_auto_detect_slot(self, val):
         #  print(self.ui.autoDetectRB.isChecked())
         if self.ui.autoDetectRB.isChecked():
             self._slot_check_one_img()
     
-     # 按下检测按钮后进行检测，新开一个线程
+    # Perform detection in a new thread after pressing the detect button
     def _slot_check_one_img(self):
-        self.ui.checkThePicture.setEnabled(False)  # 避免多次点击
+        self.ui.checkThePicture.setEnabled(False)  # Prevent multiple clicks
         try:
             path = os.path.join(self.imgPath, self.currentImgName)
             if not os.path.exists(path):
-                self.ui.checkThePicture.setEnabled(True)  # 解除检测按钮封印
+                self.ui.checkThePicture.setEnabled(True)  # Re-enable the detect button
                 return
             if self.net == None:
-                print("模型为空！！，请检查")
-                self.ui.checkThePicture.setEnabled(True)  # 解除检测按钮封印
+                print("Model is empty!! Please check.")
+                self.ui.checkThePicture.setEnabled(True)  # Re-enable the detect button
                 return
-            # print("传入线程的Path ", path)
-            thread_1 = Thread_1( self.currentTransformImg, self.net)  # 创建线程1
+            
+            thread_1 = Thread_1( self.currentTransformImg, self.net) # Create the inference thread
             self.tasksList.append(thread_1)
-            thread_1._signal.connect(self._th_slot_destroy_thread_1)         # 线程发出信号连接到槽函数
+            thread_1._signal.connect(self._th_slot_destroy_thread_1) # Connect the signal emitted by the thread to the slot function
             thread_1.start()  # 开启线程
         except Exception as e:
-            print("开启检测线程失败: ", e)
+            print("Failed to start the detection thread: ", e)
         
-    #  线程正常结束时发出一个信号，销毁检测线程，并取出返回结果。注：仅当子线程正常执行结束才会进入该函数，异常中断不会。
+    # When the thread finishes normally, emit a signal to destroy the detection thread and retrieve the results. 
+    # Note: this function is only entered if the child thread completes successfully; it will not be triggered by an abnormal termination.
     def _th_slot_destroy_thread_1(self, rev):
         sender = self.sender()
         if len(rev) > 1:
             # print("suceed!!!")
             res = rev[1]
             # print(res.shape)
-            self.result_probMap = res # 返回的是numpy数组，掩膜，shape(class,h,w)
+            self.result_probMap = res # The returned data is a NumPy array representing the mask, with shape `(class, h, w)`.
             self._update_dst_img(res, 0.5)
             
         if rev[0] == "off":
@@ -229,17 +227,17 @@ class SubPage(QMainWindow):
                     self.tasksList.remove(sender)
                 except Exception as e:
                     print(e)
-        # print("线程结束")
-        self.ui.checkThePicture.setEnabled(True)  # 解除检测按钮封印
+        
+        self.ui.checkThePicture.setEnabled(True)  # Unlock the detect button
     
-    # =====更新结果图=======
+    # =====Update the result image=======
     def _update_dst_img(self, probMap, mask_ratio=0.5):
        
-        self.ui.threshold_hS.setSliderPosition((self.ui.threshold_hS.minimum()+self.ui.threshold_hS.maximum())//2) # 滑动条重置
+        self.ui.threshold_hS.setSliderPosition((self.ui.threshold_hS.minimum()+self.ui.threshold_hS.maximum())//2) # Reset the sliders
         self.ui.label_prob_th.setText(str(0.5))
         
-        self._update_binary_picture(probMap, mask_ratio) # 显示二值图
-        self._update_add_picture(probMap, mask_ratio) # 显示叠加图
+        self._update_binary_picture(probMap, mask_ratio)    # Display the binary image
+        self._update_add_picture(probMap, mask_ratio)       # Display the overlay image
         
             
     def _update_dst_img_slider(self):
@@ -248,21 +246,21 @@ class SubPage(QMainWindow):
         hs_min = self.ui.threshold_hS.minimum()
         hs_max = self.ui.threshold_hS.maximum()
         ratio = float(new_th)/(float(hs_max-hs_min))
-        self.ui.label_prob_th.setText(str(ratio)) # 设置显示框里面的置信度阈值
+        self.ui.label_prob_th.setText(str(ratio)) # Set the confidence threshold in the display box
         
         self.ratio = ratio
         probMap = self.result_probMap
-        self._update_binary_picture(probMap, ratio) # 显示二值图
-        self._update_add_picture(probMap, ratio) # 显示叠加图
+        self._update_binary_picture(probMap, ratio) # Display the binary map
+        self._update_add_picture(probMap, ratio)    # Display the overlay image
     
-    # 设置语义分割二值图（虽然是彩图，为了显示方便）
+    # Set the semantic segmentation binary map (though it's a color image, for easier visualization)
     def _update_binary_picture(self, probMap, mask_ratio=0.5):
-        care = probMap>=mask_ratio # 0.5作为分割阈值
+        care = probMap>=mask_ratio # Use 0.5 as the segmentation threshold
         h,w = np.shape(probMap)[1:]
-        result = np.ones(shape=(h, w, 3), dtype=np.uint8)*255 # 纯白色图片，绘制语义分割纯粹结果，RGB
+        result = np.ones(shape=(h, w, 3), dtype=np.uint8)*255 # Pure white image for drawing the raw semantic segmentation result in RGB
         len_cmap=len(self.colorMap)
         for i in range(0, len(care)):
-            result[care[i]] = self.colorMap[i%len_cmap] # 每一类的语义分割结果赋予不同颜色
+            result[care[i]] = self.colorMap[i%len_cmap] # Assign a different color to the semantic segmentation result of each class
         
         self.currentDstImg = result
         w, h = self.ui.dstImgWin.width(), self.ui.dstImgWin.height()
@@ -270,22 +268,22 @@ class SubPage(QMainWindow):
         disp_frame = CommonHelper.numpy_to_QImage(result, format=QImage.Format_RGB888)
         disp_frame = QPixmap.fromImage(disp_frame)
         try:
-            if not disp_frame.isNull():     # 不是空QPixmap才进行设置
+            if not disp_frame.isNull(): 
                 self.ui.dstImgWin.setPixmap(disp_frame)                
         except Exception as e:
-            print("设置语义分割二值处理结果出错！:", e)
+            print("Failed to set the binary result of semantic segmentation!:", e)
     
-    # 设置叠加图       
+    # Set the overlay image       
     def _update_add_picture(self, probMap, mask_ratio=0.5):
         w, h = self.ui.dstImgWin_2.width(), self.ui.dstImgWin_2.height()
        
         img = self.currentSourceImg.copy()
         img = img.astype(np.float32)/255.0
         
-        care = probMap>=mask_ratio # 取掩膜[class, h, w]
-        fall_ratio = float(np.count_nonzero(care))/float(care.shape[1]*care.shape[2]) # 更新脱落率
+        care = probMap>=mask_ratio # Retrieve the mask with shape [class, h, w]
+        fall_ratio = float(np.count_nonzero(care))/float(care.shape[1]*care.shape[2])
         self.ui.label_fall_ratio.setText(str(fall_ratio)[0:7])
-        # 图片和掩膜尺寸必须一致
+        # The image and mask dimensions must match
         if img.shape[0] == care.shape[1] and img.shape[1] == care.shape[2]:
             pass
         else:
@@ -294,7 +292,6 @@ class SubPage(QMainWindow):
         len_cmap=len(self.colorMap)
         for i in range(0, len(care)):
             img[care[i]] = img[care[i]] + np.array(self.colorMap[i%len_cmap], dtype=np.float32)/255.0
-        #img[:,:,1][care] =  img[:,:,1][care]+0.5
         
         img = (img - img.min())/(img.max()-img.min())
         img = (img*255).astype(np.uint8)
@@ -305,19 +302,19 @@ class SubPage(QMainWindow):
         disp_frame = QPixmap.fromImage(disp_frame)
         
         try:
-            if not disp_frame.isNull():     # 不是空QPixmap才进行设置
+            if not disp_frame.isNull(): 
                 self.ui.dstImgWin_2.setPixmap(disp_frame)
         except Exception as e:
-            print("设置叠加图处理结果出错！:", e)
+            print("Failed to set the overlay image result!:", e)
         
 
-    # ----------槽函数，切换图片,用户界面操作时才会进入该函数----------------------------
+    # ----------Slot function for switching images, entered only during user interface interactions.----------------------------
     def _slot_switch_image_by_cb(self, text):
         if text == self.currentImgName or text == "":
             return
         else:
             self.currentImgName = text
-            self._update_source_image_win()  # 更新窗口显示以及文件名显示
+            self._update_source_image_win()  # Update the window display and the filename display
             if self.ui.autoDetectRB.isChecked():
                 self._slot_check_one_img()
                 
@@ -326,33 +323,33 @@ class SubPage(QMainWindow):
                 return
             else:
                 self.currentModelName = text
-                self._slot_update_model()  # 更新模型
+                self._slot_update_model() 
                 if self.ui.autoDetectRB.isChecked():
                     self._slot_check_one_img()
                     
-    #  ------------ 槽函数，选择图片路径或者单个图片，切换图片---------------------
+    #  ------------ Slot function for selecting an image path or a single image and switching the image.---------------------
     def _slot_open_image(self):
-        # 设置文件扩展名过滤,注意用双分号间隔
+        # Set file extension filters; note to separate them using double semicolons.
         img_type: str
-        img_name, img_type = QFileDialog.getOpenFileName(self, "打开图片", "",
+        img_name, img_type = QFileDialog.getOpenFileName(self, "Open image", "",
                                                        " *.jpg;;*.png;;*.jpeg;;*.bmp;;All Files (*)")
         if img_name == "":
             return
-        self.imgPath = os.path.split(img_name)[0]  # 待检测图片文件所在的路径
-        self.currentImgName = os.path.split(img_name)[1]  # 被选中的图片文件的名字
-        NameList = CommonHelper.get_file_list(self.imgPath)  # 获取所有图片名
+        self.imgPath = os.path.split(img_name)[0]            # Path of the images to be detected
+        self.currentImgName = os.path.split(img_name)[1]     # Name of the selected image file
+        NameList = CommonHelper.get_file_list(self.imgPath)  # Retrieve all image filenames
         self.fileNameList = natsorted(NameList)
-        self._update_source_image_win()     # 更新窗口显示的图片
-        self._update_images_name_list_cb()  # 更新下拉框里面的文件名列表
+        self._update_source_image_win()     # Update the image displayed in the window
+        self._update_images_name_list_cb()  # Update the list of filenames in the dropdown box
         
     def _slot_open_model(self):
         img_type: str
-        model_name, img_type = QFileDialog.getOpenFileName(self, "选择模型", "",
+        model_name, img_type = QFileDialog.getOpenFileName(self, "Select a model", "",
                                                        " *.onnx")
         if model_name == "":
             return
-        self.modelPath = os.path.split(model_name)[0]  # 模型文件所在的路径
-        self.currentModelName = os.path.split(model_name)[1]  # 被选中的模型文件的名字
+        self.modelPath = os.path.split(model_name)[0]         # Path to the model file
+        self.currentModelName = os.path.split(model_name)[1]  # Name of the selected model file
         self.modelNameList = []
         for item in os.listdir(self.modelPath):
             if item.split('.')[-1] == 'onnx':
@@ -365,9 +362,9 @@ class SubPage(QMainWindow):
         path = os.path.join(self.modelPath, modelName)
         try:
             sess_options = onnxruntime.SessionOptions()
-            sess_options.intra_op_num_threads = 4 # 设置每个操作的线程数，以控制并行执行的程度。
-            sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL 	# ORT_SEQUENTIAL ORT_PARALLEL 并行执行模式。在这种模式下，计算图中的操作可以并行执行
-            sess_options.inter_op_num_threads = 4 # 设置跨操作的线程数，以控制这些操作之间的并行执行程度。
+            sess_options.intra_op_num_threads = 4
+            sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
+            sess_options.inter_op_num_threads = 4
             sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
             sess_options.enable_cpu_mem_arena = False
             if self.ui.useGPURB.isChecked():
@@ -376,68 +373,69 @@ class SubPage(QMainWindow):
             else:
                 self.net = onnxruntime.InferenceSession(path, providers=['CPUExecutionProvider'], sess_options=sess_options)
         except Exception as e:
-            print("加载模型失败，尝试重新加载, 异常信息为：\n", str(e))
+            print("Failed to load the model, attempting to reload. Exception message:\n", str(e))
             try:
                 # sess_options.use_cuda = False
                 self.net = onnxruntime.InferenceSession(path, providers=['CPUExecutionProvider'], sess_options=sess_options)
             except Exception as e2:
                 # print('error GPU')
-                print("加载模型完全失败，模型初始化为空，异常信息为：\n", str(e))
+                print("Failed to fully load the model; model initialization is empty. Exception message:\n", str(e))
                 self.net = None
 
-    # ----------上一张图片----------------  s
+    # ----------Previous image----------------  s
     def _slot_previous_img(self):
         self._switch_adjacent_image(-1)
         if self.ui.autoDetectRB.isChecked():
             self._slot_check_one_img()
 
-    # --------- 下一张图片----------------
+    # --------- Next image----------------
     def _slot_next_img(self):
         self._switch_adjacent_image(1)
         if self.ui.autoDetectRB.isChecked():
             self._slot_check_one_img()
-    # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&初始化函数&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    # &定义必要的全局变量&
+
+    # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&Initialization function&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+    # &Define the necessary global variables&
     def set_global_variable_dynamic(self):
-        self.currentSourceImg = np.ones(shape=(1024,1024), dtype=np.uint8)*255 # 原图
-        self.currentTransformImg = np.ones(shape=(1024,1024), dtype=np.uint8)*255 # 变换后的图像
-        self.result_probMap = np.ones(shape=(1, 1024,1024), dtype=np.uint8)*255 # 概率图
+        self.currentSourceImg = np.ones(shape=(1024,1024), dtype=np.uint8)*255 # src img
+        self.currentTransformImg = np.ones(shape=(1024,1024), dtype=np.uint8)*255 # Transformed image
+        self.result_probMap = np.ones(shape=(1, 1024,1024), dtype=np.uint8)*255 # Probability map
         
-        self.currentDstImg = np.ones(shape=(1024,1024, 3), dtype=np.uint8)*255  # 目标二值图
-        self.currentAddImg = np.ones(shape=(1024,1024, 3), dtype=np.uint8)*255  # 目标叠加图
+        self.currentDstImg = np.ones(shape=(1024,1024, 3), dtype=np.uint8)*255  # Target binary map
+        self.currentAddImg = np.ones(shape=(1024,1024, 3), dtype=np.uint8)*255  # Target overlay image
         
     def __set_global_variable(self):
         self.colorMap=[(255,50,70),(0,255,30),(0,56,230),
                     (254,67,101), (252,157,154), (131,175,155),(244,208,0),(220,87,18),
                     (64,116,52),(161,47,47)]
-        # self.imgPath = r'C:\Users\hp\Desktop\test\1'  # 图片所在的路径，选择图片之后才设置
-        self.imgPath = r'C:\Users\hp\Desktop\tiredata\images'  # 图片所在的路径，选择图片之后才设置
         
-        self.currentImgName = "2.jpg"  # 当前图片的名称，和self.imgPath合起来就是图片绝对路径   
+        self.imgPath = r'C:\Users\hp\Desktop\tiredata\images'  # Path of the image, set only after selecting an image
+        
+        self.currentImgName = "2.jpg"  #Current image name; combined with self.imgPath, it forms the absolute image path.   
         
         self.set_global_variable_dynamic()
-        self.fileNameList = []  # 定义图片文件名储存的列表
-        self.results_dict = {} # 储存已经检测的结果、相关阈值，每张图片用列表储存
+        self.fileNameList = []  # Define the list for storing image file names
+        self.results_dict = {}  # Store the detected results and related thresholds. Each image should be stored in a list
         self.tasksList = []
         
         self.ui.stackedWidget.setCurrentIndex(1)
         self.distortMap = {"brightness":1, "contrast":1, "saturation":1, "hue":0, "sharpness":0}
         self.ratio = 0.5
-        self._reset_sliders_labels() # 重置诸多滑动条
+        self._reset_sliders_labels() # Reset many sliders
     
-    # &加载显示默认路径下的图片文件，并设置标签
+    # &Load the image file displayed in the default path and set the label
     def __load_default_img(self):
-        # 如果提供的默认路径存在，则打开并显示图片
+        # If the default path provided exists, open and display the image
         if os.path.exists(self.imgPath):
             self._update_source_image_win()
-            self.fileNameList = CommonHelper.get_file_list(self.imgPath)    # 刷新图片名列表
-            self._update_images_name_list_cb()  # 更新图片名选择框
+            self.fileNameList = CommonHelper.get_file_list(self.imgPath) # Refresh the list of picture rankings
+            self._update_images_name_list_cb()  # Update the picture name selection box
 
-    # ===============================辅助函数，更新模型、更新图片、更新预训结果显示==========================================================
+    # ===============================Auxiliary functions: update the model, update the image, and update the pre-training result display==========================================================
     
     def _reset_sliders_labels(self):
-        self.ui.threshold_hS.setValue((self.ui.threshold_hS.maximum()-self.ui.threshold_hS.minimum())//2) # 设置滑动条到中点
-        self.ui.label_prob_th.setText(str(0.5)) # 概率阈值标签
+        self.ui.threshold_hS.setValue((self.ui.threshold_hS.maximum()-self.ui.threshold_hS.minimum())//2) # Set the slider to the midpoint
+        self.ui.label_prob_th.setText(str(0.5)) # Probability threshold label
         
         self.ui.BrightnessHSlider.setValue((self.ui.BrightnessHSlider.maximum()-self.ui.BrightnessHSlider.minimum())//2)
         self.ui.label_brightness_delta.setText(str(1))
@@ -454,25 +452,25 @@ class SubPage(QMainWindow):
         self.ui.sharpnessHSlider.setValue((self.ui.sharpnessHSlider.maximum()-self.ui.sharpnessHSlider.minimum())//2)
         self.ui.label_sharpness_delta.setText(str(0))
         
-        self.distortMap = {"brightness":1, "contrast":1, "saturation":1, "hue":0, "sharpness":0} # 重置参数字典
+        self.distortMap = {"brightness":1, "contrast":1, "saturation":1, "hue":0, "sharpness":0} 
         
 
-    # ***********************更新图片选择框里面的名字**********************************
+    # ***********************Update the name in the picture selection box**********************************
     def _update_images_name_list_cb(self):
         self.ui.selectedFileNameCB.clear()
         self.ui.selectedFileNameCB.addItems(self.fileNameList)
-        self.ui.selectedFileNameCB.setCurrentText(self.currentImgName)  # 设置文件名选择框里面的名字
+        self.ui.selectedFileNameCB.setCurrentText(self.currentImgName)  # Set the name in the file name selection box
         
     def _update_model_name_list_cb(self):
         self.ui.selectModelCB.clear()
         self.ui.selectModelCB.addItems(self.modelNameList)
         self.ui.selectModelCB.setCurrentText(self.currentModelName)
 
-    # ************************更新窗口显示的图片*******************************************
+    # ************************Update the picture displayed in the window*******************************************
     def _update_source_image_win(self):
-        self.set_global_variable_dynamic() # 更新临时的全局变量
+        self.set_global_variable_dynamic() # Update temporary global variables
         
-        #  利用QLabel显示图片
+        #  Display images using QLabel
         w, h = self.ui.srcImgWin.width(), self.ui.srcImgWin.height() 
         abs_path = os.path.join(self.imgPath, self.currentImgName)
         
@@ -490,15 +488,14 @@ class SubPage(QMainWindow):
         disp_frame = CommonHelper.numpy_to_QImage(result, format=QImage.Format_RGB888)
         disp_frame = QPixmap.fromImage(disp_frame)
         if not disp_frame.isNull():
-              # 缩放图片到显示框一样大小
+            # Scale the picture to the same size as the display box
             self.ui.srcImgWin.clear()
             self.ui.srcImgWin.setPixmap(disp_frame)
-            # 设置其它结果窗口空白
+            # Set other result Windows blank
             self.ui.dstImgWin.clear()
             self.ui.dstImgWin_2.clear()
             
     def _update_source_image_win_byTransform(self):
-        #  利用QLabel显示图片
         w, h = self.ui.srcImgWin.width(), self.ui.srcImgWin.height()         
 
         self.currentTransformImg = self._transformImg(self.currentSourceImg)
@@ -507,15 +504,13 @@ class SubPage(QMainWindow):
         disp_frame = CommonHelper.numpy_to_QImage(result, format=QImage.Format_RGB888)
         disp_frame = QPixmap.fromImage(disp_frame)
         if not disp_frame.isNull():
-              # 缩放图片到显示框一样大小
             self.ui.srcImgWin.clear()
             self.ui.srcImgWin.setPixmap(disp_frame)
-            # 设置其它结果窗口空白
             self.ui.dstImgWin.clear()
             self.ui.dstImgWin_2.clear()
             
     def _transformImg(self, srcImg):
-        pil_img = Image.fromarray(srcImg) # 转到PIL，RGB格式
+        pil_img = Image.fromarray(srcImg) # to PIL，RGB format
         # self.distortMap = {"brightness":1, "contrast":1, "saturation":1, "hue":0, "sharpness":0}
         if(abs(self.distortMap["brightness"]-1.0)>=0.001):
             pil_img = brightness(pil_img, self.distortMap["brightness"])
@@ -534,29 +529,28 @@ class SubPage(QMainWindow):
             
         return np.array(pil_img)
 
-    # ************************往前或后切换一张图片*******************************************
+    # ************************Switch a picture forward or backward*******************************************
     def _switch_adjacent_image(self, mode):
         num = len(self.fileNameList)
-        # 没有图片或只有一张图片就直接跳过
+        # Skip it directly if there is no picture or only one picture
         if num == 0 or num == 1:
             return
-        i = self.fileNameList.index(self.currentImgName)  # 获取现在显示的图片在图片列表中的索引
+        i = self.fileNameList.index(self.currentImgName)  # Get the index of the currently displayed image in the image list
         if i == 0 and mode == -1:
             return
         if i == len(self.fileNameList) - 1 and mode == 1:
             return
         else:
-            self.currentImgName = self.fileNameList[i + mode]  # 先改变当前文件名
-            self._update_source_image_win()  # 更新窗口显示以及文件名显示
-            self._reset_sliders_labels() # 重置诸多滑动条
-            self.ui.selectedFileNameCB.setCurrentText(self.currentImgName)  # 设置文件名选择框里面的名字
+            self.currentImgName = self.fileNameList[i + mode]  # Change the current file name first
+            self._update_source_image_win()  # Update the window display and file name display
+            self._reset_sliders_labels() # Reset many sliders
+            self.ui.selectedFileNameCB.setCurrentText(self.currentImgName)  # Set the name in the file name selection box
 
 
         
-    # ********************设置ui的函数，内容比较多，就放后面了***************
+    # ********************The function for setting the ui has quite a lot of content, so it's placed later***************
 
     def __set_ui(self):
-        # 本窗口设置
         base_path = r'E:\code\git\PaddleSeg\qt_dev\v1'
         icon = QIcon();
         icon_img = QPixmap(os.path.join(base_path, "source/1.png"))
@@ -565,24 +559,18 @@ class SubPage(QMainWindow):
             icon.addPixmap(icon_img)
         self.setWindowIcon(icon)
         self.setWindowTitle("Segmentation ONNX GUI")
-        # self.setWindowOpacity(1)  # 设置窗口透明度
         pe = QPalette()
-        pe.setColor(QPalette.Window, QColor(238, 237, 239))  # 设置背景色,rgb
+        pe.setColor(QPalette.Window, QColor(238, 237, 239))  # Set the background color,rgb
         self.setPalette(pe)
 
-        # 设置样式表
-        #  stylefile = os.path.join(basePath, 'style/style.qss')
-        #  self.qssstyle = CommonHelper.readQSS(stylefile)
-        #  self.setStyleSheet(self.qssstyle)
 
-        # ui控件设置
-        # 检测按钮
+        # "Detection button"
         self.ui.checkThePicture.setStyleSheet(
-            "QPushButton{color:rgb(101,153,26)}"  # 按键前景色，字体颜色
-            "QPushButton{background-color:rgb(198,224,205)}"  # 按键背景色,填充颜色
-            "QPushButton:hover{color:red}"  # 光标移动到上面后的前景色
-            "QPushButton{border-radius:6px}"  # 圆角半径
-            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # 按下时的样式
+            "QPushButton{color:rgb(101,153,26)}"  # The view in front of the keys and the font color
+            "QPushButton{background-color:rgb(198,224,205)}"  # Key background color, fill color
+            "QPushButton:hover{color:red}"  # The foreground color after the cursor is moved above
+            "QPushButton{border-radius:6px}"  # Fillet radius
+            "QPushButton:pressed{background-color:rgb(180,180,180);border: None;}"  # The style when pressed
         )
         self.ui.checkThePicture.setIconSize(QSize(30, 30))
         self.ui.checkThePicture.setIcon(
@@ -592,13 +580,12 @@ class SubPage(QMainWindow):
                      color_active='orange')
         )
 
-        # 上一张按钮
+        # The previous button
         #  self.ui.previousImgBtn.setLayoutDirection(1)
         self.ui.previousImgBtn.setStyleSheet(
-            "QPushButton{color:rgb(255,255,255)}"  # 文字颜色
-            #  "font:bold 14px" #  字体
-            "QPushButton{background-color:rgb(128,128,255)}"  # 按键背景色
-            "QPushButton{border-radius:6px}"  # 圆角半径
+            "QPushButton{color:rgb(255,255,255)}"  # Text color
+            "QPushButton{background-color:rgb(128,128,255)}"  # Key background color
+            "QPushButton{border-radius:6px}"  # Fillet radius
         )
         self.ui.previousImgBtn.setIconSize(QSize(30, 30))
         self.ui.previousImgBtn.setIcon(
@@ -607,12 +594,12 @@ class SubPage(QMainWindow):
                      color='blue',
                      color_active='orange'))
 
-        # 下一张按钮
+        # Next button
         self.ui.nextImgBtn.setLayoutDirection(1)
         self.ui.nextImgBtn.setStyleSheet(
-            "QPushButton{color:rgb(255,255,255)}"  # /*文字颜色*/
-            "QPushButton{background-color:rgb(128,128,255)}"  # 按键背景色
-            "QPushButton{border-radius:6px}"  # 圆角半径
+            "QPushButton{color:rgb(255,255,255)}"  
+            "QPushButton{background-color:rgb(128,128,255)}"  
+            "QPushButton{border-radius:6px}"  
             # "QPushButton{padding-right:40px}"
         )
         self.ui.nextImgBtn.setIconSize(QSize(30, 30))
@@ -623,20 +610,20 @@ class SubPage(QMainWindow):
 
        
 
-        # 选择文件按钮
+        # Select File button
         self.ui.selectFileBtn.setStyleSheet(
-            "QPushButton{color:rgb(101,153,26)}"  # 按键前景色，字体颜色
-            "QPushButton{background-color:rgb(198,224,205)}"  # 按键背景色,填充颜色
-            "QPushButton{border-radius:8px}"  # 圆角半径
+            "QPushButton{color:rgb(101,153,26)}"  
+            "QPushButton{background-color:rgb(198,224,205)}" 
+            "QPushButton{border-radius:8px}" 
         )
         self.ui.selectFileBtn.setIconSize(QSize(30, 30))
-        self.ui.selectFileBtn.setIcon(  # 文件选择按钮
+        self.ui.selectFileBtn.setIcon(  
             qta.icon('fa5s.folder-open')
         )
 
      
 
-# # 定义一些辅助函数
+# # Define some auxiliary functions
 class CommonHelper():
     @staticmethod
     def readQSS(style):

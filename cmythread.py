@@ -21,7 +21,7 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 class Thread_1(QThread):
-    _signal = pyqtSignal(list)  #线程要发出的信号格式
+    _signal = pyqtSignal(list)  
     def __init__(self, img, net):
         super().__init__() 
         self.img = img
@@ -32,7 +32,7 @@ class Thread_1(QThread):
             image_src = self.img
             
             inputs_info = self.session.get_inputs()
-            # 查看模型输入信息
+            # View the model input information
             print("The Model Input Info...............")
             for i in inputs_info:
                 print(f"Name: {i.name}")
@@ -50,7 +50,7 @@ class Thread_1(QThread):
             if inputs_info[0].shape[1] == 3:
                 img_in = image_src
             else:
-                # 单通道语义分割
+                # Single-channel semantic segmentation
                 img_in = cv2.cvtColor(image_src, cv2.COLOR_BGR2GRAY)
                 img_in = img_in[..., np.newaxis]
             
@@ -77,7 +77,7 @@ class Thread_1(QThread):
             if output_index_0.shape[1] > 1:
                 print("Detect Multi-class Output............................")
                 logmax = softmax(output_index_0)
-                pred2 = logmax[0,1:,:,:] # [class, H, W] 0是背景，不要
+                pred2 = logmax[0,1:,:,:] # [class, H, W] 0 is the background, not
 
             elif output_index_0.shape[1] == 1:
                 print("Detect Binary Output.................................")
@@ -91,7 +91,7 @@ class Thread_1(QThread):
         
         except Exception as e:
             pred2 = np.ones(shape=(1024,1024), dtype=np.float32)
-            print("线程中遇到错误: ", e)
+            print("An error was encountered in the thread: ", e)
         
         res = pred2
         self._signal.emit(["off", res])
