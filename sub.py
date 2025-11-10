@@ -415,12 +415,11 @@ class SubPage(QMainWindow):
         def generate_colors(n):
             colors = []
             for i in range(n):
-                h = (i * 1.0 / n)  # hue is evenly distributed
-                s = 0.8 + 0.2 * random.random()  # High saturation
-                v = 0.7 + 0.3 * random.random()  # Medium to high brightness
+                h = i / n
+                s = 0.9
+                v = 0.9
                 r, g, b = colorsys.hsv_to_rgb(h, s, v)
                 colors.append((int(r * 255), int(g * 255), int(b * 255)))
-            random.shuffle(colors)  # Disrupt to avoid being too close to each other
             return colors
 
         # 扩展到255个颜色
